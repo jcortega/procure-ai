@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "pYCKjpc474t26d5!!!"
+    volumes:
+      - "./db:/var/lib/postgresql"
+    ports:
+      - 15432:5432
