@@ -1,4 +1,7 @@
 import os
+from os import listdir
+from os.path import isfile, join
+
 from langchain.embeddings import BedrockEmbeddings
 from langchain.llms.bedrock import Bedrock
 from langchain.document_loaders import PyPDFLoader
@@ -90,12 +93,12 @@ class Agent:
 
     def generate_criteria(self):
         prompt_template = """
-        Human: You are a Procurement Specialist. Use the following pieces of context to provide a concise answer to the question at the end.
+        Human: You are a Procurement Specialist Assistant. Use the following pieces of context to provide a concise answer to the question at the end.
         The given document is a Request for Proposal (RFP) document.
         If you don't know the answer, just say that you don't know, don't try to make up an answer.
         <context>
         {context}
-        </context
+        </context>
 
         Question: {question}
 
@@ -129,11 +132,9 @@ class Agent:
         """
 
         answer = qa({"query": query})
-        print(answer["result"])
+        # print(answer["result"])
 
         criteria = self._extract_criteria(answer["result"], 'criterion')
-
-        print(criteria)
 
         self.current_rfp.clear_rfp(self.current_rfp.id)
         for c in criteria:
@@ -141,5 +142,62 @@ class Agent:
                 self.current_rfp.id, c["description"], c["questions"], c["percentage"])
         # TODO: validate and repeat until valid
 
-    def evaluate_submission(self, id):
-        pass
+        return criteria
+
+    def evaluate_responses(self, rfp: Rfp, criteria):
+        responses_dir = f"responses/{rfp.id}"
+        onlyfiles = [f for f in listdir(
+            responses_dir) if isfile(join(responses_dir, f))]
+
+        for resp_file_path in onlyfiles:
+            complete_path = f"{responses_dir}/{resp_file_path}"
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print(f"Evaluating {complete_path}")
+            # resp_file_path = f"responses/{rfp.id}/companyA.txt"
+            f = open(complete_path, "r")
+            response = f.read()
+            f.close()
+
+            prompt_template = """
+            Human: You are a Procurement Specialist. Use the following pieces of context and criteria to evaluate vendor response.
+            The given document is a Request for Proposal (RFP) document.
+            If you don't know how to evaluate, just say that you don't know, don't try to make up an answer.
+            <context>
+            {context}
+            </context>
+
+            Question: {question}
+
+            Assistant:"""
+
+            PROMPT = PromptTemplate(
+                template=prompt_template, input_variables=[
+                    "context", "question"],
+            )
+            # PROMPT.partial(response=response, criteria=criteria)
+
+            qa = RetrievalQA.from_chain_type(
+                llm=llm,
+                chain_type="stuff",
+                retriever=self.rfp_vstore.as_retriever(
+                    search_type="similarity", search_kwargs={"k": 3}
+                ),
+                return_source_documents=True,
+                chain_type_kwargs={"prompt": PROMPT}
+            )
+
+            query = f"""
+            For the given criteria and response below, generate a score for each criteria based on the response,
+            and provide the total score in the end.
+            <criteria>
+            {criteria}
+            </criteria>
+
+            <response>
+            {response}
+            </response>
+            """
+
+            answer = qa({"query": query})
+            print(answer["result"])
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++\n\n")

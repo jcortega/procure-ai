@@ -40,9 +40,11 @@ def main():
     # Agent - Generate criteria for sample rfp
     sample_rfp = rfps[0]
     procurement_specialist_agent.read_rfp(sample_rfp)
-    procurement_specialist_agent.generate_criteria()
+    criteria = procurement_specialist_agent.generate_criteria()
 
     # Agent - Generate questions for vendor
+    # procurement_specialist_agent.evaluate_responses(sample_rfp)
+    procurement_specialist_agent.evaluate_responses(sample_rfp, criteria)
 
 
 if __name__ == "__main__":
