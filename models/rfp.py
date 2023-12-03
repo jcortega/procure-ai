@@ -50,15 +50,15 @@ class Rfp:
         self.conn.commit()
         return id
 
-    def insert_criteria(self, rfp_id,  description, percent):
+    def insert_criteria(self, rfp_id,  description, questions, percent):
         cursor = self.conn.cursor()
         query = """
             INSERT INTO public.criteria(
-                rfp_id, description, percent)
-                VALUES (%s, %s, %s) RETURNING id;
+                rfp_id, description, questions, percent)
+                VALUES (%s, %s, %s, %s) RETURNING id;
         """
 
-        cursor.execute(query, (rfp_id, description, percent))
+        cursor.execute(query, (rfp_id, description, questions, percent))
         id = cursor.fetchone()[0]
         self.conn.commit()
         return id
