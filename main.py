@@ -33,6 +33,9 @@ def main():
     print("Generate criteria and guide questions for vendors...")
     criteria = procurement_specialist_agent.generate_criteria()
     print("Criteria generated. Please review below before openning RFP to public.")
+    for c in criteria:
+        print(f"- {c['description']} {c['percentage']}%")
+        print(c['questions'])
 
     # Agent - Generate questions for vendor
     print("Evaluate vendor submissions in responses folder...")
