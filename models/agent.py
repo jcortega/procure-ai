@@ -63,7 +63,6 @@ class Agent:
         """
 
         self.current_rfp = rfp
-        print(self.current_rfp)
         loader = PyPDFLoader(f"./rfp/{self.current_rfp.id}")
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
