@@ -23,28 +23,21 @@ def main():
     dao = Dao()
     rfps = list_rfps(dao.conn)
 
-    # for r in rfps:
-    #     print("Clearing rfp entries")
-    #     r.clear_rfp(r.id)
-    #     criteria_id = r.insert_criteria(r.id, "this is the criteria", 100)
-    #     print(f"inserted criteria {criteria_id}")
-    #     question_id = r.insert_question(
-    #         criteria_id, f"another question {datetime.datetime.now()}")
-    #     print(f"inserted question {question_id}")
-
-    #     questions = r.list_questions()
-    #     for q in questions:
-    #         print(q)
-
     procurement_specialist_agent = Agent()
     # Agent - Generate criteria for sample rfp
     sample_rfp = rfps[0]
+
+    print("Reading RFPs...")
     procurement_specialist_agent.read_rfp(sample_rfp)
+
+    print("Generate criteria and guide questions for vendors...")
     criteria = procurement_specialist_agent.generate_criteria()
+    print("Criteria generated. Please review below before openning RFP to public.")
 
     # Agent - Generate questions for vendor
-    # procurement_specialist_agent.evaluate_responses(sample_rfp)
+    print("Evaluate vendor submissions in responses folder...")
     procurement_specialist_agent.evaluate_responses(sample_rfp, criteria)
+    print("Evaluation finished.")
 
 
 if __name__ == "__main__":
