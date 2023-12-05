@@ -57,6 +57,14 @@ class Agent:
 
         return [{"description": res.find('description').get_text(), "questions": res.find('questions').get_text(), "percentage": int(res.find('percentage').get_text())} for res in results]
 
+    def _extract_evaluation(self, response: str, tag: str):
+        soup = BeautifulSoup(response, "lxml")
+        results = soup.find_all(tag)
+        if not results:
+            return []
+
+        return {"score": results[0].get_text()}
+
     def read_rfp(self, rfp: Rfp):
         """
         Initializes vector store from given documents in rfp
@@ -148,6 +156,7 @@ class Agent:
         onlyfiles = [f for f in listdir(
             responses_dir) if isfile(join(responses_dir, f))]
 
+        scores = {}
         for resp_file_path in onlyfiles:
             complete_path = f"{responses_dir}/{resp_file_path}"
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++")
@@ -187,7 +196,8 @@ class Agent:
 
             query = f"""
             For the given criteria and response below, generate a score for each criteria based on the response,
-            and provide the total score in the end.
+            and provide the total score in the end. Enclose your evaluation in <evaluation></evaluation> tag and 
+            the score numerator only in <score></score> tag.
             <criteria>
             {criteria}
             </criteria>
@@ -198,5 +208,13 @@ class Agent:
             """
 
             answer = qa({"query": query})
+            score = self._extract_evaluation(answer["result"], 'score')
             print(answer["result"])
+
+            scores[resp_file_path] = self.parse_score((score["score"]))
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++\n\n")
+        return scores
+
+    def parse_score(self, score):
+        score = score.split('/')[0]
+        return int(score)

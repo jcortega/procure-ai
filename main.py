@@ -2,6 +2,7 @@ import datetime
 import psycopg2
 from models.rfp import list_rfps
 from models.agent import Agent
+import json
 
 import os
 import sys
@@ -30,17 +31,31 @@ def main():
     print("Reading RFPs...")
     procurement_specialist_agent.read_rfp(sample_rfp)
 
-    print("Generate criteria and guide questions for vendors...")
-    criteria = procurement_specialist_agent.generate_criteria()
-    print("Criteria generated. Please review below before openning RFP to public.")
-    for c in criteria:
-        print(f"- {c['description']} {c['percentage']}%")
-        print(c['questions'])
+    # Run 100 iterations for test
+    interation_results = []
+    for _ in range(100):
+        try:
+            print("Generate criteria and guide questions for vendors...")
+            criteria = procurement_specialist_agent.generate_criteria()
+            print(
+                "Criteria generated. Please review below before openning RFP to public.")
+            for c in criteria:
+                print(f"- {c['description']} {c['percentage']}%")
+                print(c['questions'])
 
-    # Agent - Generate questions for vendor
-    print("Evaluate vendor submissions in responses folder...")
-    procurement_specialist_agent.evaluate_responses(sample_rfp, criteria)
-    print("Evaluation finished.")
+            # Agent - Generate questions for vendor
+            print("Evaluate vendor submissions in responses folder...")
+            scores = procurement_specialist_agent.evaluate_responses(
+                sample_rfp, criteria)
+        except:
+            interation_results.append({"status": "invalid"})
+        else:
+            interation_results.append(scores)
+
+        print("Evaluation finished.")
+
+    with open('results.json', 'w') as f:
+        json.dump(interation_results, f)
 
 
 if __name__ == "__main__":
