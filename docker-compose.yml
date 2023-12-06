@@ -3,7 +3,7 @@ services:
     image: postgres:16
     restart: always
     environment:
-      POSTGRES_PASSWORD: "pYCKjpc474t26d5!!!"
+      POSTGRES_PASSWORD: "changeme"
     volumes:
       - "./db:/var/lib/postgresql"
     ports:
